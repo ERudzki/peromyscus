@@ -1,0 +1,91 @@
+################################################################################
+##### GENERATE RANDOM TREES #####
+# This section will generate 100,000 random trees with same topology and leaf labels
+# as host phylogenies.
+
+folderIn=peromyscus
+./tree_random.py -o $folderIn"/random_trees" -n 100000 -i CA,LE,MA,PO
+for i in $folderIn"/random_trees/"*
+do
+    echo $i
+    cat $i >> $folderIn"/random_trees.newick"
+done
+rm -rf $folderIn"/random_trees/"
+
+################################################################################
+##### CALCULATE SCORES #####
+# Input the host and microbiome trees and calculate scores, do the same for STOCHASTIC 
+
+### TP1
+methodIn="ms" 
+
+folderIn=TP1 ; refIn="$folderIn"/newick/ht.newick; compareIn="$folderIn"/newick/mt.newick; outIn="$folderIn"/treecmp_"$methodIn".txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+compareIn="$folderIn"/random_trees.newick; outIn="$folderIn"/treecmp_"$methodIn"_stochastic.txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+
+methodIn="rf"
+
+folderIn=TP1 ; refIn="$folderIn"/newick/ht.newick; compareIn="$folderIn"/newick/mt.newick; outIn="$folderIn"/treecmp_"$methodIn".txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+compareIn="$folderIn"/random_trees.newick; outIn="$folderIn"/treecmp_"$methodIn"_stochastic.txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+
+methodIn="mc"
+
+folderIn=TP1 ; refIn="$folderIn"/newick/ht.newick; compareIn="$folderIn"/newick/mt.newick; outIn="$folderIn"/treecmp_"$methodIn".txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+compareIn="$folderIn"/random_trees.newick; outIn="$folderIn"/treecmp_"$methodIn"_stochastic.txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+
+methodIn="rc"
+
+folderIn=TP1 ; refIn="$folderIn"/newick/ht.newick; compareIn="$folderIn"/newick/mt.newick; outIn="$folderIn"/treecmp_"$methodIn".txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+compareIn="$folderIn"/random_trees.newick; outIn="$folderIn"/treecmp_"$methodIn"_stochastic.txt;
+java -jar TreeCmp/bin/TreeCmp.jar -r $refIn -d $methodIn -i $compareIn -o $outIn -N &
+
+
+################################################################################
+##### COLLATE THE RESULTS #####
+
+folderIn=TP1
+
+
+### THESE SCRIPTS HAVE USER INTERFACE ###
+# YOU WILL ENTER ONE OF THE COMMANDS TO START THE PYTHON COLLATE PROGRAM FOR THE METRIC YOU WANT
+# WHEN THE PROGRAM STARTS IT WILL LIST THE FILES IN THAT DIRECTORY
+# ENTER THE NUMBER OF THE STOCHASTIC FILE FOR THE METRIC YOU WANT,
+# FOLLOWED BY A COMMA (NO SPACES) AND THE NUMBER OF THE HOST-MICROBE COMPARISON FOR THE MTRIC YOU WANT...
+# I.E. THE SCRIPT MAY OUTPUT THIS....
+#   Input Files [-i --input_fps]:  drosophila/*
+#   Files Found:
+#     0. drosophila/edited
+#     1. drosophila/newick
+#     2. drosophila/pdf
+#     3. drosophila/random_trees.newick
+#     4. drosophila/raw
+#     5. drosophila/treecmp_mc_norm.txt
+#     6. drosophila/treecmp_mc_stochastic_norm.txt
+# AND YOU WOULD ENTER 6,5 IF YOU WANTED TO LOOK AT THE MC METRIC
+# THEN JUST ENTER 0 TWICE TO SAY THE FILES IMPORTED CORRECTLY (PANDAS UTILITY)
+# AND YOU WILL GET OUTPUT LOOKING LIKE....
+############
+# Host-Microbe Score:   2.0 (COMPARISON OF HOST AND ACTUAL MICROBIOTA TREES)
+
+# Better Score:         684        (STOCHASTIC TREES WITH BETTER SCORE)
+# Worse Score:          95362      (STOCHASTIC TREES WITH WORSE SCORE)
+# Equiv Score:          3954       (STOCHASTIC TREES WITH EQUIVALENT SCORE)
+# P-value better:       0.00684    *** NOT USED BUT P-VALUE FOR STOCHASTIC HAVING MORE CONCORDANCE
+
+# Better\Equal Score:   4638
+# Worse Score:          95362
+# P-value Better/Equal: 0.04638    *** P-VALUE STOCHASTIC SAME OR BETTER CONCORDANCE
+
+# Max Stochastic Metric:  4.0      MAXIMUM (WORST) CONCORDANCE MEASURED WITH ANY STOCHSTIC TREES
+##############
+
+./pandas_collate_robinson_foulds_rc.py -i "$folderIn/*" -v
+./pandas_collate_robinson_foulds_mc.py -i "$folderIn/*" -v
+./pandas_collate_robinson_foulds_rf.py -i "$folderIn/*" -v
+./pandas_collate_robinson_foulds_ms.py -i "$folderIn/*" -v
